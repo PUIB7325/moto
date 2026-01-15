@@ -1,0 +1,11 @@
+{
+  "name": "bibliotheque-maintenance",
+  "version": "1.0.0",
+  "description": "Bibliothèque de maintenance automobile",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {}
+}

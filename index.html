@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliothèque de Maintenance Automobile</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* PAGE D'ACCUEIL */
+        .home-page {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 30px 0;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1em;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .documents-list {
+            background: white;
+            border-radius: 15px;
+            overflow-y: auto;
+            max-height: calc(100vh - 300px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 10px;
+        }
+
+        .document-item {
+            padding: 18px 20px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            font-size: 1.05em;
+            font-weight: 500;
+        }
+
+        .document-item:hover {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            transform: translateX(8px);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.2);
+        }
+
+        .document-item:active {
+            transform: translateX(5px);
+        }
+
+        /* PAGE DE VISUALISATION PDF */
+        .viewer-page {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+            background: white;
+        }
+
+        .viewer-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .viewer-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .viewer-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            background: rgba(255,255,255,0.3);
+            border: 1px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: rgba(255,255,255,0.5);
+            border-color: rgba(255,255,255,0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .pdf-container {
+            flex: 1;
+            overflow: auto;
+            position: relative;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #pdfCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .pdf-controls {
+            background: white;
+            padding: 12px 20px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .pdf-controls button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-controls button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .pdf-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pdf-page-info {
+            color: #666;
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        .footer-actions {
+            background: white;
+            padding: 15px 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-large {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-large:active {
+            transform: translateY(0);
+        }
+
+        .documents-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .documents-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .documents-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        .documents-list::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8em;
+            }
+
+            header p {
+                font-size: 1em;
+            }
+
+            .document-item {
+                padding: 15px 16px;
+                font-size: 1em;
+            }
+
+            .viewer-header {
+                padding: 12px 15px;
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .viewer-title {
+                font-size: 1.1em;
+                width: 100%;
+                word-break: break-word;
+            }
+
+            .viewer-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .btn {
+                flex: 1;
+                padding: 10px 12px;
+                font-size: 0.85em;
+            }
+
+            .footer-actions {
+                flex-direction: column;
+            }
+
+            .btn-large {
+                width: 100%;
+            }
+
+            .documents-list {
+                max-height: calc(100vh - 250px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0;
+            }
+
+            .home-page {
+                padding: 10px;
+            }
+
+            header {
+                margin-bottom: 20px;
+                padding: 20px 0;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            header p {
+                font-size: 0.9em;
+            }
+
+            .search-box {
+                font-size: 16px;
+                padding: 12px 16px;
+            }
+
+            .document-item {
+                padding: 12px 12px;
+                font-size: 0.95em;
+                margin-bottom: 6px;
+            }
+
+            .btn {
+                padding: 8px 10px;
+                font-size: 0.8em;
+            }
+
+            .btn-large {
+                padding: 12px 20px;
+                font-size: 0.95em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- PAGE D'ACCUEIL -->
+    <div class="home-page" id="homePage">
+        <div class="container">
+            <header>
+                <h1>📚 Bibliothèque de Maintenance</h1>
+                <p>Accédez facilement à tous vos documents de maintenance automobile</p>
+            </header>
+
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    class="search-box" 
+                    id="searchInput" 
+                    placeholder="🔍 Rechercher un document..."
+                >
+            </div>
+
+            <div class="documents-list" id="documentsList"></div>
+        </div>
+    </div>
+
+    <!-- PAGE DE VISUALISATION PDF -->
+    <div class="viewer-page" id="viewerPage">
+        <div class="viewer-header">
+            <div class="viewer-title" id="viewerTitle"></div>
+            <div class="viewer-controls">
+                <button class="btn" id="downloadBtn">⬇️ Télécharger</button>
+            </div>
+        </div>
+        <div class="pdf-container">
+            <div class="pdf-controls">
+                <button id="prevBtn">← Précédent</button>
+                <span class="pdf-page-info">
+                    Page <span id="currentPage">1</span> / <span id="totalPages">0</span>
+                </span>
+                <button id="nextBtn">Suivant →</button>
+            </div>
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+        <div class="footer-actions">
+            <button class="btn-large" id="backBtn">← Retour à la liste</button>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // Liste des documents disponibles
+        const documents = [
+            'FICHE AUTO-ÉVALUATION - EXERCICE - La lubrication.pdf',
+            'FICHE AUTO-ÉVALUATION - EXERCICE - La transmission.pdf',
+            'FICHE AUTO-ÉVALUATION - EXERCICE - Le moteur.pdf',
+            'FICHE AUTO-ÉVALUATION - EXERCICE - Les pneumatiques.pdf',
+            'FICHE AUTO-ÉVALUATION - EXERCICE - L\'échappement.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer le radiateur de refroidissement.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer les disques et plaquettes de frein.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer un bras oscillant.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer un capteur de roue ABS.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer un capteur du système d\'injection.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer un kit chaîne.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer un ltre à air.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer un variateur.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer une bobine d\'allumage.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer une bougie d\'allumage.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer une durite du circuit de carburant.pdf',
+            'FICHE AUTO-ÉVALUATION - Remplacer une durite du circuit de refroidissement.pdf',
+            'FICHE AUTO-ÉVALUATION - Réparer un pneumatique.pdf',
+            'FICHE AUTO-ÉVALUATION - Utiliser un appareil de diagnostic.pdf',
+            'FICHE AUTO-ÉVALUATION - Vidanger l\'huile de transmission d\'un scooter.pdf',
+            'LA TRANSMISSION - LE CONTEXTE.pdf',
+            'PAS À PAS - Contrôler l\'étanchéité du.pdf',
+            'Remplacer le radiateur de refroidissement.pdf',
+            'Remplacer les disques et plaquettes de frein.pdf',
+            'Remplacer un bras oscillant.pdf',
+            'Remplacer un capteur de roue ABS.pdf',
+            'Remplacer un capteur du système d\'injection.pdf',
+            'Remplacer un injecteur.pdf',
+            'Remplacer un kit chaîne.pdf',
+            'Remplacer un ltre à air.pdf',
+            'Remplacer un variateur.pdf',
+            'Remplacer une bobine d\'allumage.pdf',
+            'Remplacer une bougie d\'allumage.pdf',
+            'Remplacer une durite du circuit de carburant.pdf',
+            'Remplacer une durite du circuit de.pdf',
+            'Réparer un pneumatique.pdf',
+            'Utiliser un appareil de diagnostic.pdf',
+            'Vidanger l\'huile de transmission d\'un scooter.pdf'
+        ];
+
+        let filteredDocuments = [...documents];
+        let pdfDoc = null;
+        let currentPageNum = 1;
+        let totalPages = 0;
+        let currentFileName = '';
+
+        // Initialiser la liste des documents
+        function initializeList(docsToShow = documents) {
+            const list = document.getElementById('documentsList');
+            list.innerHTML = '';
+            
+            docsToShow.forEach(doc => {
+                const item = document.createElement('div');
+                item.className = 'document-item';
+                item.textContent = doc.replace('.pdf', '');
+                item.onclick = () => openDocument(doc);
+                list.appendChild(item);
+            });
+        }
+
+        // Afficher une page du PDF
+        async function renderPDF(pageNum) {
+            if (!pdfDoc) return;
+            
+            try {
+                const page = await pdfDoc.getPage(pageNum);
+                const canvas = document.getElementById('pdfCanvas');
+                const context = canvas.getContext('2d');
+                
+                const scale = window.innerWidth < 768 ? 1.5 : 2;
+                const viewport = page.getViewport({ scale });
+                
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                // Mettre à jour les informations de page
+                document.getElementById('currentPage').textContent = pageNum;
+                document.getElementById('totalPages').textContent = totalPages;
+                
+                // Désactiver/Activer les boutons
+                document.getElementById('prevBtn').disabled = pageNum <= 1;
+                document.getElementById('nextBtn').disabled = pageNum >= totalPages;
+            } catch (error) {
+                console.error('Erreur lors de l\'affichage du PDF:', error);
+            }
+        }
+
+        // Ouvrir un document
+        async function openDocument(fileName) {
+            const title = document.getElementById('viewerTitle');
+            const homePage = document.getElementById('homePage');
+            const viewerPage = document.getElementById('viewerPage');
+
+            // Afficher le titre sans .pdf
+            title.textContent = fileName.replace('.pdf', '');
+            currentFileName = fileName;
+            currentPageNum = 1;
+
+            try {
+                // Charger le PDF avec encodage correct de l'URL
+                const encodedFileName = fileName.split('/').map(part => encodeURIComponent(part)).join('/');
+                // URL dynamique pour localhost et Netlify
+                const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const baseUrl = isLocalhost ? 'http://localhost:8000' : `${window.location.origin}/.netlify/functions/serve`;
+                const fileUrl = `${baseUrl}/${encodedFileName}`;
+                console.log('Chargement:', fileUrl);
+                pdfDoc = await pdfjsLib.getDocument(fileUrl).promise;
+                totalPages = pdfDoc.numPages;
+                
+                // Configurer le bouton de téléchargement
+                document.getElementById('downloadBtn').onclick = () => downloadPDF(fileName);
+                
+                // Passer à la page de visualisation
+                homePage.style.display = 'none';
+                viewerPage.style.display = 'flex';
+                
+                // Afficher la première page
+                await renderPDF(1);
+                
+                // Scroll en haut de la page
+                window.scrollTo(0, 0);
+            } catch (error) {
+                console.error('Erreur lors du chargement du PDF:', error);
+                alert('Erreur lors du chargement du PDF. Veuillez vérifier que le fichier existe.');
+            }
+        }
+
+        // Revenir à la page d'accueil
+        function goBack() {
+            document.getElementById('homePage').style.display = 'flex';
+            document.getElementById('viewerPage').style.display = 'none';
+            pdfDoc = null;
+            currentPageNum = 1;
+            totalPages = 0;
+            window.scrollTo(0, 0);
+        }
+
+        // Navigation entre les pages
+        document.getElementById('prevBtn').addEventListener('click', async () => {
+            if (currentPageNum > 1) {
+                currentPageNum--;
+                await renderPDF(currentPageNum);
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', async () => {
+            if (currentPageNum < totalPages) {
+                currentPageNum++;
+                await renderPDF(currentPageNum);
+            }
+        });
+
+        // Télécharger le PDF
+        function downloadPDF(fileName) {
+            const link = document.createElement('a');
+            const encodedFileName = fileName.split('/').map(part => encodeURIComponent(part)).join('/');
+            // URL dynamique pour localhost et Netlify
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const baseUrl = isLocalhost ? 'http://localhost:8000' : `${window.location.origin}/.netlify/functions/serve`;
+            link.href = `${baseUrl}/${encodedFileName}`;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Recherche
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            filteredDocuments = documents.filter(doc => 
+                doc.toLowerCase().includes(query)
+            );
+            initializeList(filteredDocuments);
+        });
+
+        // Bouton retour
+        document.getElementById('backBtn').addEventListener('click', goBack);
+
+        // Initialiser au chargement
+        initializeList();
+    </script>
+</body>
+</html>

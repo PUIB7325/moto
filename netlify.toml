@@ -1,0 +1,16 @@
+[build]
+  command = "node server.js"
+  functions = "functions"
+  publish = "."
+
+[dev]
+  command = "node server.js"
+  port = 8000
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  NODE_ENV = "production"
