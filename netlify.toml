@@ -2,15 +2,16 @@
   functions = "functions"
   publish = "."
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
 # Ne pas rediriger les fichiers PDF
 [[redirects]]
   from = "/*.pdf"
   to = "/:splat.pdf"
+  status = 200
+
+# SPA routing - rediriger tout vers index.html SAUF les PDFs
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
   status = 200
 
 [[headers]]
