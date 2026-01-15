@@ -7,5 +7,17 @@
   to = "/index.html"
   status = 200
 
+# Ne pas rediriger les fichiers PDF
+[[redirects]]
+  from = "/*.pdf"
+  to = "/:splat.pdf"
+  status = 200
+
+[[headers]]
+  for = "/*.pdf"
+  [headers.values]
+    Content-Type = "application/pdf"
+    Access-Control-Allow-Origin = "*"
+
 [context.production.environment]
   NODE_ENV = "production"

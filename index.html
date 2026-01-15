@@ -516,7 +516,7 @@
                 const encodedFileName = fileName.split('/').map(part => encodeURIComponent(part)).join('/');
                 // URL dynamique pour localhost et Netlify
                 const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const baseUrl = isLocalhost ? 'http://localhost:8000' : `${window.location.origin}/.netlify/functions/serve`;
+                const baseUrl = isLocalhost ? 'http://localhost:8000' : window.location.origin;
                 const fileUrl = `${baseUrl}/${encodedFileName}`;
                 console.log('Chargement:', fileUrl);
                 pdfDoc = await pdfjsLib.getDocument(fileUrl).promise;
@@ -571,7 +571,7 @@
             const encodedFileName = fileName.split('/').map(part => encodeURIComponent(part)).join('/');
             // URL dynamique pour localhost et Netlify
             const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const baseUrl = isLocalhost ? 'http://localhost:8000' : `${window.location.origin}/.netlify/functions/serve`;
+            const baseUrl = isLocalhost ? 'http://localhost:8000' : window.location.origin;
             link.href = `${baseUrl}/${encodedFileName}`;
             link.download = fileName;
             document.body.appendChild(link);
